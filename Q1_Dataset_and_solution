@@ -1,0 +1,56 @@
+--- VIDEO_Q1 ---
+
+/* Problem Statement:
+- For pairs of brands in the same year (e.g. apple/samsung/2020 and samsung/apple/2020) 
+    - if custom1 = custom3 and custom2 = custom4 : then keep only one pair
+
+- For pairs of brands in the same year 
+    - if custom1 != custom3 OR custom2 != custom4 : then keep both pairs
+
+- For brands that do not have pairs in the same year : keep those rows as well
+*/
+VIDEO LINK:- https://www.youtube.com/watch?v=FRzbOb3jdLg&list=PLavw5C92dz9Hxz0YhttDniNgKejQlPoAn
+
+DROP TABLE IF EXISTS techtfq.brands;
+CREATE TABLE techtfq.brands 
+(
+    brand1      VARCHAR(20),
+    brand2      VARCHAR(20),
+    year        INT,
+    custom1     INT,
+    custom2     INT,
+    custom3     INT,
+    custom4     INT
+);
+INSERT INTO techtfq.brands VALUES ('apple', 'samsung', 2020, 1, 2, 1, 2);
+INSERT INTO techtfq.brands VALUES ('samsung', 'apple', 2020, 1, 2, 1, 2);
+INSERT INTO techtfq.brands VALUES ('apple', 'samsung', 2021, 1, 2, 5, 3);
+INSERT INTO techtfq.brands VALUES ('samsung', 'apple', 2021, 5, 3, 1, 2);
+INSERT INTO techtfq.brands VALUES ('google', NULL, 2020, 5, 9, NULL, NULL);
+INSERT INTO techtfq.brands VALUES ('oneplus', 'nothing', 2020, 5, 9, 6, 3);
+
+SELECT * FROM techtfq.brands;
+
+------------------ SOLUTION 1 --------------------------
+SELECT least(brand1,brand2) as brand1 , greatest(brand1,brand2) as brand2 ,year,custom1 ,custom2 ,custom3 ,custom4 
+FROM techtfq.brands 
+group by least(brand1,brand2)  , greatest(brand1,brand2) ,year,custom1 ,custom2 ,custom3 ,custom4 
+order by brand1 ;
+
+------------------ SOLUTION 2 --------------------------
+
+with cte as (
+			SELECT *, 
+			case when brand1 < brand2 then concat(brand1,brand2,year) 
+				 else concat(brand2,brand1,year) end as brand_id
+			FROM techtfq.brands),
+	cte2 as (
+			select *,ROW_NUMBER() OVER(partition by brand_id order by brand_id) as flag
+			from cte
+	)
+select brand1 ,brand2 ,year,custom1 ,custom2 ,custom3 ,custom4 
+from cte2
+where flag = 1 or (custom1 <> custom3 and custom2 <> custom4);
+
+
+
