@@ -1,0 +1,57 @@
+VIDEO LINK:- https://www.youtube.com/watch?v=rM1BVoBke04&list=PLavw5C92dz9Hxz0YhttDniNgKejQlPoAn&index=2
+
+drop table if exists techtfq.mountain_huts;
+create table techtfq.mountain_huts 
+(
+	id 			integer not null unique,
+	name 		varchar(40) not null unique,
+	altitude 	integer not null
+);
+insert into techtfq.mountain_huts values (1, 'Dakonat', 1900);
+insert into techtfq.mountain_huts values (2, 'Natisa', 2100);
+insert into techtfq.mountain_huts values (3, 'Gajantut', 1600);
+insert into techtfq.mountain_huts values (4, 'Rifat', 782);
+insert into techtfq.mountain_huts values (5, 'Tupur', 1370);
+
+drop table if exists techtfq.techtfq.trails;
+create table techtfq.trails 
+(
+	hut1 		integer not null,
+	hut2 		integer not null
+);
+insert into techtfq.trails values (1, 3);
+insert into techtfq.trails values (3, 2);
+insert into techtfq.trails values (3, 5);
+insert into techtfq.trails values (4, 5);
+insert into techtfq.trails values (1, 5);
+
+select * from techtfq.mountain_huts;
+select * from techtfq.trails;
+
+
+SOLUTION 1
+
+with h1a as (
+		select M.name ,t.hut2,m.altitude as hut1_altitude
+		from techtfq.trails t
+	    join techtfq.mountain_huts m
+		on m.id = t.hut1 
+),
+h2a as (
+		select h1a.name as h1_name,m.name as h2_name,h1a.hut1_altitude,m.altitude as hut2_altitude
+		from h1a 
+		join techtfq.mountain_huts m
+		on m.id = h1a.hut2
+),
+cte as (
+		select case when hut1_altitude > hut2_altitude then h1_name else h2_name end as h1_name
+		,case when hut2_altitude < hut1_altitude then h2_name else h1_name end as h2_name
+		,case when hut1_altitude > hut2_altitude then hut1_altitude else hut2_altitude end as hut1_altitude
+		,case when hut2_altitude < hut1_altitude then hut2_altitude else hut1_altitude end as hut2_altitude
+		from h2a
+)
+
+select cc.h1_name as sourcep ,cc.h2_name as midp ,c.h2_name as endp 
+from cte c 
+join cte cc 
+on c.h1_name = cc.h2_name;
